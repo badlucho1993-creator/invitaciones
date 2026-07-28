@@ -3,107 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Mi Cumpleaños!</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Sniglet:wght@800&display=swap" rel="stylesheet">
-    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <title>Generador de Invitaciones - Nico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* Chosen Palette: Mario Galaxy Theme */
         body {
-            min-height: 100vh;
-            min-height: 100dvh; /* Evita que las barras del navegador móvil corten la pantalla */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            background: url('https://ssb.wiki.gallery/images/thumb/c/c8/SSBU-Mario_Galaxy.jpg/1200px-SSBU-Mario_Galaxy.jpg') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Fredoka One', cursive;
-            overflow-y: auto;
-            gap: 15px;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Application Structure Plan:
+         Una interfaz limpia de tipo "Dashboard" de una sola página.
+         Consiste en un formulario de entrada de datos y una sección de salida 
+         dinámica que muestra el enlace generado y permite copiarlo. 
+         Se ha elegido este diseño para facilitar la creación rápida de múltiples 
+         enlaces sin recargar la página. -->
+
+    <div class="max-w-md w-full glass p-8 rounded-3xl shadow-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-yellow-400">Generador de Enlaces ✉️</h1>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1 text-blue-300">Invitado 1 (o Principal)</label>
+                <input type="text" id="name1" placeholder="Ej: John" 
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 outline-none transition-all">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1 text-blue-300">Invitado 2 (Opcional)</label>
+                <input type="text" id="name2" placeholder="Ej: Jairito" 
+                    class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-yellow-400 outline-none transition-all">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="generateURL()" 
+                    class="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 rounded-lg transition-colors shadow-lg">
+                    Crear Enlace
+                </button>
+                <button onclick="clearInputs()" 
+                    class="bg-slate-700 hover:bg-slate-600 text-white px-4 rounded-lg transition-colors">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <div id="resultArea" class="mt-8 hidden space-y-3">
+            <label class="block text-sm font-medium text-green-400">Enlace generado:</label>
+            <div class="bg-black/40 p-4 rounded-xl border border-white/10 break-all text-sm font-mono text-blue-200" id="urlDisplay">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="copyToClipboard()" 
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold transition-all">
+                    Copiar Enlace
+                </button>
+                <a id="testLink" href="#" target="_blank" 
+                    class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-sm font-semibold text-center transition-all">
+                    Probar Link
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Visualization & Content Choices:
+           - Input Fields: Text inputs for user data.
+           - Logic: Vanilla JS used to process strings and build the URI.
+           - Interactivity: Real-time generation feedback and clipboard copy.
+           - Method: Functional programming for string manipulation (Regex/Encode).
+           CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+        */
+
+        const BASE_URL = "https://badlucho1993-creator.github.io/invitaciones/";
+
+        function generateURL() {
+            const n1 = document.getElementById('name1').value.trim();
+            const n2 = document.getElementById('name2').value.trim();
+
+            if (!n1 && !n2) return;
+
+            let finalNombre = "";
+            let finalUsuario = "";
+            let pluralParam = "";
+
+            if (n1 && n2) {
+                // Lógica de plural: Nombre1 y Nombre2
+                finalNombre = encodeURIComponent(`${n1} y ${n2}`);
+                // Usuario: Sin espacios y concatenados
+                const u1 = n1.replace(/\s+/g, '');
+                const u2 = n2.replace(/\s+/g, '');
+                finalUsuario = encodeURIComponent(u1 + u2);
+                pluralParam = "&plural=true";
+            } else {
+                // Lógica singular (solo uno de los dos tiene valor)
+                const name = n1 || n2;
+                finalNombre = encodeURIComponent(name);
+                finalUsuario = encodeURIComponent(name.replace(/\s+/g, ''));
+            }
+
+            const fullURL = `${BASE_URL}?nombre=${finalNombre}&usuario=${finalUsuario}${pluralParam}`;
+            
+            // Mostrar resultados
+            const resultArea = document.getElementById('resultArea');
+            const urlDisplay = document.getElementById('urlDisplay');
+            const testLink = document.getElementById('testLink');
+
+            urlDisplay.innerText = fullURL;
+            testLink.href = fullURL;
+            resultArea.classList.remove('hidden');
         }
 
-        /* Pantalla de bienvenida interactiva para activar el audio en iOS */
-        .welcome-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 25, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            transition: opacity 0.5s ease;
-            padding: 20px;
+        function clearInputs() {
+            document.getElementById('name1').value = '';
+            document.getElementById('name2').value = '';
+            document.getElementById('resultArea').classList.add('hidden');
         }
 
-        /* FIX iOS Safari: Forzar respuesta táctil en botones */
-        .welcome-btn {
-            padding: 18px 36px;
-            font-size: 1.6rem;
-            font-family: 'Fredoka One', cursive;
-            color: #fff;
-            background: linear-gradient(135deg, #FF5722, #FF9800);
-            border: 4px solid #fff;
-            border-radius: 50px;
-            cursor: pointer !important;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            animation: pulse 1.5s infinite;
-            transition: transform 0.2s;
-            max-width: 100%;
-            text-align: center;
+        function copyToClipboard() {
+            const text = document.getElementById('urlDisplay').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("¡Enlace copiado al portapapeles!");
+            });
         }
-
-        .welcome-btn:hover, .welcome-btn:active {
-            transform: scale(1.05);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 87, 34, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 34, 0); }
-        }
-
-        /* Tarjeta de Invitación (oculta al inicio) */
-        .invitation-card {
-            text-align: center;
-            position: relative;
-            width: 100%;
-            max-width: 440px;
-            padding: 25px 20px;
-            background: rgba(0, 0, 0, 0.5); 
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            display: none;
-        }
-
-        /* Cuadrado extra para regalos */
-        .gifts-card {
-            text-align: center;
-            width: 100%;
-            max-width: 440px;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            font-family: 'Sniglet', cursive;
-            color: #fff;
-            font-size: 1.1rem;
+    </script>
+</body>
+</html>            font-size: 1.1rem;
             display: none;
             opacity: 0;
         }
