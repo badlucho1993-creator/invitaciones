@@ -15,7 +15,7 @@
 
         body {
             min-height: 100vh;
-            min-height: 100dvh; /* Evita que las barras del navegador móvil corten la pantalla */
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -28,7 +28,6 @@
             gap: 15px;
         }
 
-        /* Pantalla de bienvenida interactiva para activar el audio en iOS */
         .welcome-overlay {
             position: fixed;
             top: 0;
@@ -44,7 +43,6 @@
             padding: 20px;
         }
 
-        /* FIX iOS Safari: Forzar respuesta táctil en botones */
         .welcome-btn {
             padding: 18px 36px;
             font-size: 1.6rem;
@@ -61,6 +59,8 @@
             transition: transform 0.2s;
             max-width: 100%;
             text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .welcome-btn:hover, .welcome-btn:active {
@@ -73,7 +73,6 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 34, 0); }
         }
 
-        /* Tarjeta de Invitación (oculta al inicio) */
         .invitation-card {
             text-align: center;
             position: relative;
@@ -89,7 +88,6 @@
             display: none;
         }
 
-        /* Cuadrado extra para regalos */
         .gifts-card {
             text-align: center;
             width: 100%;
@@ -139,7 +137,6 @@
             overflow: hidden;
         }
 
-        /* Animación del rebote elástico */
         @keyframes bounce-in-down {
             0% { transform: translateY(-500px) scaleY(1.2) scaleX(0.8); opacity: 0; }
             60% { transform: translateY(10px) scaleY(0.8) scaleX(1.2); opacity: 1; }
@@ -153,6 +150,8 @@
             max-width: 100%;
             object-fit: contain;
             transition: opacity 0.8s ease-in-out;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .animate-bounce {
@@ -220,7 +219,7 @@
             transform: scale(1.03);
         }
 
-        /* BOTÓN FLOTANTE MÚSICA (ESQUINA INFERIOR IZQUIERDA) */
+        /* BOTÓN FLOTANTE MÚSICA */
         .music-control-btn {
             position: fixed;
             bottom: 20px;
@@ -230,7 +229,7 @@
             border-radius: 50%;
             background: linear-gradient(135deg, #FF5722, #FF9800);
             border: 3px solid #fff;
-            display: none; /* Se muestra al abrir la invitación */
+            display: none;
             justify-content: center;
             align-items: center;
             font-size: 1.6rem;
@@ -241,13 +240,36 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             transition: transform 0.2s;
+            
+            /* Bloqueo absoluto de selección de texto/emoji */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .music-control-btn:active {
             transform: scale(0.92);
         }
 
-        /* Animación de rotación cuando suena la música */
+        /* Animación de entrada rodando desde la derecha */
+        .animate-roll-in {
+            animation: roll-in-right 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes roll-in-right {
+            0% {
+                transform: translateX(calc(100vw - 40px)) rotate(720deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Animación de rotación continua al sonar */
         .music-control-btn.playing {
             animation: spin 3s linear infinite;
         }
@@ -257,7 +279,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Ondas tipo sonar cuando está en pausa/detenido */
+        /* Ondas sonar en pausa */
         .music-control-btn.paused::before,
         .music-control-btn.paused::after {
             content: '';
@@ -287,7 +309,6 @@
             }
         }
 
-        /* REPRODUCTOR COMPLETAMENTE TRANSPARENTE E INVISIBLE */
         .audio-player-fixed {
             position: fixed;
             bottom: 15px;
@@ -372,31 +393,21 @@
     </div>
 
     <script>
-        // --- LÓGICA DE PARÁMETROS URL ---
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // Parámetro 'nombre' (alias 'n')
         const nombreParam = urlParams.get('nombre') || urlParams.get('n') || 'Amigo/a';
-        
-        // Parámetro 'usuario' (alias 'u') para el regalo. Si no está, usa el nombre.
         const usuarioParam = urlParams.get('usuario') || urlParams.get('u') || nombreParam;
-        
-        // Parámetro 'plural' (alias 'p'). Si no está, auto-detecta por símbolos.
         const explicitPlural = urlParams.get('plural') || urlParams.get('p');
         let isPlural = false;
         
         if (explicitPlural !== null && explicitPlural !== undefined) {
             isPlural = (explicitPlural === 'true' || explicitPlural === '1' || explicitPlural === 'os');
         } else {
-            // Auto-detección: si contiene '&', 'y', 'familia' o ',' es plural.
             isPlural = /(&|\by\b|,|familia)/i.test(nombreParam);
         }
 
-        // Variables para control del Widget SoundCloud y estado de audio
         let scWidget = null;
         let isPlaying = false;
 
-        // Aplicar textos personalizados al cargar e inicializar el Widget
         document.addEventListener('DOMContentLoaded', () => {
             const guestTitle = document.getElementById('guestTitle');
             const guestSubtitle = document.getElementById('guestSubtitle');
@@ -407,16 +418,13 @@
                 ? 'Nico os invita a su cumple nº6' 
                 : 'Nico te invita a su cumple nº6';
 
-            // Actualiza dinámicamente el enlace a la web de regalos
             const encodedUser = encodeURIComponent(usuarioParam);
             giftsLink.href = `https://badluchothree-glitch.github.io/?usuario=${encodedUser}`;
 
-            // Inicializar SoundCloud API
             try {
                 const iframeElement = document.getElementById('sc-widget');
                 scWidget = SC.Widget(iframeElement);
 
-                // Escuchar eventos oficiales de SoundCloud para mantener sincronizado el botón
                 scWidget.bind(SC.Widget.Events.PLAY, () => {
                     isPlaying = true;
                     updateMusicButtonState(true);
@@ -436,7 +444,6 @@
             }
         });
 
-        // Actualiza el aspecto y la animación del botón de música
         function updateMusicButtonState(playing) {
             const musicBtn = document.getElementById('musicBtn');
             if (playing) {
@@ -448,7 +455,6 @@
             }
         }
 
-        // Función toggle para pausar o reproducir al pulsar el botón flotante
         window.toggleAudio = function() {
             if (!scWidget) return;
 
@@ -461,7 +467,6 @@
             });
         };
 
-        // --- CARRUSEL DE IMÁGENES ---
         const images = [
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e2bf54af-7573-447c-b8a7-d499bb5f4f37/dl0b5le-c9f78d87-8386-4ae8-8f29-bcca62a7cc58.png/v1/fill/w_849,h_941/movie_mario_and_yoshi_png_1_by_mariogalaxyfan234_dl0b5le-pre.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQxOCIsInBhdGgiOiIvZi9lMmJmNTRhZi03NTczLTQ0N2MtYjhhNy1kNDk5YmI1ZjRmMzcvZGwwYjVsZS1jOWY3OGQ4Ny04Mzg2LTRhZTgtOGYyOS1iY2NhNjJhN2NjNTgucG5nIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.8clIuxrhfsRN0UnwzxbhXkXUmuRk1g0jZKeKEGLulvQ",
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e2bf54af-7573-447c-b8a7-d499bb5f4f37/dlcpxrw-e0c80d06-9cfa-421e-8c3a-53fefabb3ee6.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9lMmJmNTRhZi03NTczLTQ0N2MtYjhhNy1kNDk5YmI1ZjRmMzcvZGxjcHhydy1lMGM4MGQwNi05Y2ZhLTQyMWUtOGMzYS01M2ZlZmFiYjNlZTYucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.FwdEEf3fooNvXsR-imC9Lonmmw4fdTaPzZHJq0vAEQo",
@@ -476,12 +481,10 @@
         let currentImageIndex = 0;
 
         window.startInvitation = function() {
-            // 1. Ocultar la capa de bienvenida
             const overlay = document.getElementById('welcomeOverlay');
             overlay.style.opacity = '0';
             setTimeout(() => overlay.style.display = 'none', 500);
 
-            // 2. Mostrar la tarjeta, botón de música e iniciar sus animaciones
             const invitationCard = document.getElementById('invitationCard');
             invitationCard.style.display = 'block';
             
@@ -490,6 +493,7 @@
             
             const musicBtn = document.getElementById('musicBtn');
             musicBtn.style.display = 'flex';
+            musicBtn.classList.add('animate-roll-in');
 
             const marioImg = document.getElementById('marioImg');
             marioImg.classList.add('animate-bounce');
@@ -500,12 +504,10 @@
                 giftsCard.style.opacity = '1';
             }, 1200);
 
-            // 3. Intento de reproducción de SoundCloud al hacer clic
             if (scWidget) {
                 scWidget.play();
             }
 
-            // 4. Iniciar carrusel tras 7 segundos
             setTimeout(() => {
                 marioImg.classList.remove('animate-bounce');
                 setInterval(changeCarouselImage, 3000);
